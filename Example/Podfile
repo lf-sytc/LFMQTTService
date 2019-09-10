@@ -1,0 +1,13 @@
+use_frameworks!
+
+platform :ios, '8.0'
+
+target 'LFMQTTService_Example' do
+  pod 'LFMQTTService', :path => '../'
+
+  target 'LFMQTTService_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end
