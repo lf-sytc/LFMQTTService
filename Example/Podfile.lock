@@ -1,15 +1,29 @@
 PODS:
-  - LFMQTTService (0.1.0)
+  - LFMQTTService (0.1.0):
+    - MQTTClient
+  - MQTTClient (0.15.2):
+    - MQTTClient/Core (= 0.15.2)
+  - MQTTClient/Core (0.15.2):
+    - MQTTClient/Manager
+    - MQTTClient/Min
+  - MQTTClient/Manager (0.15.2):
+    - MQTTClient/Min
+  - MQTTClient/Min (0.15.2)
 
 DEPENDENCIES:
   - LFMQTTService (from `../`)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - MQTTClient
 
 EXTERNAL SOURCES:
   LFMQTTService:
     :path: "../"
 
 SPEC CHECKSUMS:
-  LFMQTTService: 61dd3541ce120479c7225acf15d8d1d8f5042df6
+  LFMQTTService: 3bc2d84b9bfbb74136213e19355f7626345d1127
+  MQTTClient: 902c7bcac1501595f3d0b15178c7205b40331fb0
 
 PODFILE CHECKSUM: 080a33b494d2b68fafb0e500293ff55d847f5d48
 

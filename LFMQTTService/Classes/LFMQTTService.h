@@ -7,7 +7,7 @@
 
 #import <Foundation/Foundation.h>
 #import "LFMQTTProtocol.h"
-
+#import "LFMQTTConfig.h"
 
 typedef void (^LFMQTTConnectError)(NSError *error);
 
@@ -17,13 +17,9 @@ typedef void (^LFMQTTConnectError)(NSError *error);
 
 #pragma mark - Config
 
+- (void)configMQTT:(LFMQTTConfig *)config;
 
 - (void)configLog:(BOOL)open;
-
-- (void)configEnv:(LFMQTTEnvType)type;
-
-- (void)configMQTTWithUserId:(NSString *)userId
-                  instanceId:(NSString *)instanceId;;
 
 - (void)configMessageType:(NSString *)messageType
                  callBack:(id<LFMQTTMessageProtocol>)callBack;
@@ -31,6 +27,7 @@ typedef void (^LFMQTTConnectError)(NSError *error);
 #pragma mark - Connect
 
 - (void)startToConnect:(LFMQTTConnectError)contentError;
+
 - (void)endToConnect:(LFMQTTConnectError)contentError;
 
 

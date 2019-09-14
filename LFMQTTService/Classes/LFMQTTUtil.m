@@ -7,6 +7,7 @@
 
 #import "LFMQTTUtil.h"
 #import <CommonCrypto/CommonHMAC.h>
+
 @implementation LFMQTTUtil
 
 + (NSString *)macSignWithText:(NSString *)text secretKey:(NSString *)secretKey

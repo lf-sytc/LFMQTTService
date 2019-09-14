@@ -10,4 +10,6 @@
 
 @interface LFMQTTPROJECTViewController : UIViewController
 
+@property (weak, nonatomic) IBOutlet UISegmentedControl *envSegmentedControl;
+
 @end

@@ -8,6 +8,8 @@
 
 #import "LFMQTTPROJECTViewController.h"
 
+#import <LFMQTTService/LFMQTTService.h>
+
 @interface LFMQTTPROJECTViewController ()
 
 @end
@@ -17,13 +19,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view, typically from a nib.
+    self.title = @"MQTT测试页";
 }
 
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
 }
 
 @end
