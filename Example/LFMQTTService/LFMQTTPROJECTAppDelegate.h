@@ -7,7 +7,7 @@
 //
 
 @import UIKit;
-
+#import <LFMQTTService/LFMQTTService.h>
 @interface LFMQTTPROJECTAppDelegate : UIResponder <UIApplicationDelegate>
 
 @property (strong, nonatomic) UIWindow *window;

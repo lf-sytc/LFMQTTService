@@ -10,7 +10,8 @@
 
 @implementation LFMQTTUtil
 
-+ (NSString *)macSignWithText:(NSString *)text secretKey:(NSString *)secretKey
++ (NSString *)macSignWithText:(NSString *)text
+                    secretKey:(NSString *)secretKey
 {
     NSData *saltData = [secretKey dataUsingEncoding:NSUTF8StringEncoding];
     NSData *paramData = [text dataUsingEncoding:NSUTF8StringEncoding];

@@ -15,6 +15,7 @@
 @interface LFMQTTService()<MQTTSessionManagerDelegate>
 {
     LFMQTTConfig *config;
+    NSMutableDictionary *listenerDic;
 }
 
 @property (strong, nonatomic) MQTTSessionManager *manager;
@@ -22,7 +23,6 @@
 @property (strong, nonatomic) NSDictionary *loginMessageData;
 
 @end
-
 
 @implementation LFMQTTService
 
@@ -50,97 +50,108 @@
 
 - (void)initData{
     config = [[LFMQTTConfig alloc] init];
+    listenerDic = [[NSMutableDictionary alloc] init];
 }
 
-#pragma mark - Config
+#pragma mark - Config MQTT Parameters
 
-- (void)configEnv:(LFMQTTEnvType)type{
-//    [config configEnv:type];
+/// 配置MQTT 网络连接相关
+/// @param host id地址（阿里云MQTT控制台获取）
+/// @param port 端口号 （阿里云MQTT文档获取）
+/// @param useSSL 是否启用SSL
+/// @param keeplive 心跳间隔
+- (void)configHost:(NSString *)host
+              port:(NSInteger)port
+            useSSL:(BOOL)useSSL
+          keeplive:(NSInteger)keeplive{
+    config.host = host;
+    config.port = port;
+    config.tls = useSSL;
+    config.keeplive = keeplive;
 }
+
+
+/// 配置MQTT 是否处理离线消息 及 发送消息等级
+/// @param clean YES 不处理  NO 处理
+/// @param qos 0、1、2
+- (void)configClean:(BOOL)clean
+                qos:(NSInteger)qos{
+    config.clean = clean;
+    config.qos = qos;
+}
+
+/// 配置MQTT 配置设备ID
+/// @param deviceID 设备唯一标识
+- (void)config{
+   
+    
+}
+
+/// 配置MQTT 秘钥相关
+/// @param accessKey  阿里云秘钥
+/// @param instanceId 后台实例ID
+/// @param secretKey  阿里云MQTT秘钥
+- (void)configEnv:(LFMQTTEnvType)envType
+         deviceID:(NSString *)deviceID
+        accessKey:(NSString *)accessKey
+       instanceId:(NSString *)instanceId
+        secretKey:(NSString *)secretKey {
+    
+    [config configEnv:envType];
+    config.clientId = [NSString stringWithFormat:@"%@@@@%@",config.groupId,deviceID];
+    config.userName = [NSString stringWithFormat:@"Signature|%@|%@",accessKey,instanceId];
+    config.password = [LFMQTTUtil macSignWithText:config.clientId secretKey:secretKey];
+}
+
+#pragma mark - Config MQTT Debug Parameters
 
 - (void)configLog:(BOOL)open{
     [MQTTLog setLogLevel:open?DDLogLevelVerbose:DDLogLevelOff];
 }
 
-- (void)configMQTTWithUserId:(NSString *)userId
-                  instanceId:(NSString *)instanceId {
-    
-    config.instanceId = instanceId;
-    config.clientId = [NSString stringWithFormat:@"%@@@@%@",config.groupId,userId];
-}
-
-- (void)configMessageType:(NSString *)messageType
-                 callBack:(id<LFMQTTMessageProtocol>)callBack{
-//    [config configMessageType:messageType obj:callBack];
-}
-
-- (void)configLoginMessage:(NSString *)messageType data:(NSDictionary *)dic {
-    _loginMessageType = messageType;
-    _loginMessageData = dic;
-}
-
 #pragma mark - Connect
+
+- (void)startToConnect:(LFMQTTConnectError)contentError {
+    if (!self.manager) {
+        self.manager = [[MQTTSessionManager alloc] init];
+        self.manager.delegate = self;
+        self.manager.subscriptions = [config subscriptions];
+    }
+    [self.manager connectTo:config.host
+                       port:config.port
+                        tls:config.tls
+                  keepalive:config.keeplive
+                      clean:true
+                       auth:true
+                       user:config.userName
+                       pass:config.password
+                       will:false
+                  willTopic:nil
+                    willMsg:nil
+                    willQos:config.qos
+             willRetainFlag:false
+               withClientId:config.clientId
+             securityPolicy:nil
+               certificates:nil
+              protocolLevel:MQTTProtocolVersion311
+             connectHandler:^(NSError *error) {
+             if (contentError) {
+                 contentError(error);
+             }
+    }];
+}
 
 - (void)endToConnect:(LFMQTTConnectError)contentError {
     [self.manager disconnectWithDisconnectHandler:contentError];
 }
 
-- (void)startToConnect:(LFMQTTConnectError)contentError{
-    
-    if (!self.manager) {
-        self.manager = [[MQTTSessionManager alloc] init];
-        self.manager.delegate = self;
-        self.manager.subscriptions = [config subscriptions];
-        
-        [self.manager connectTo:config.host
-                           port:config.port
-                            tls:config.tls
-                      keepalive:60
-                          clean:true
-                           auth:true
-                           user:[config userName]
-                           pass:[config password]
-                           will:false
-                      willTopic:nil
-                        willMsg:nil
-                        willQos:0
-                 willRetainFlag:false
-                   withClientId:config.clientId
-                 securityPolicy:nil
-                   certificates:nil
-                  protocolLevel:MQTTProtocolVersion311
-                 connectHandler:^(NSError *error) {
-                     if (!error) {
-                         [self sendMessageType:self.loginMessageType messageDic:self.loginMessageData];
-                     }
-                     
-                     if (contentError) {
-                         contentError(error);
-                     }
-                 }];
-        
-    } else {
-        [self.manager connectToLast:^(NSError *error) {
-            if (!error) {
-                [self sendMessageType:self.loginMessageType messageDic:self.loginMessageData];
-            }
-            
-            if (contentError) {
-                contentError(error);
-            }
-        }];
-    }
-}
-
 #pragma mark - Send Message
 
 - (void)sendMessageType:(NSString *)type messageDic:(NSDictionary *)dic {
-    
     if (type && dic.allKeys.count > 0) {
         NSMutableDictionary *sendDic = [NSMutableDictionary dictionary];
         sendDic[@"type"] = type;
         sendDic[@"data"] = [LFMQTTUtil jsonStringWithDic:dic];
-        
         NSData *data = [LFMQTTUtil dataWtihDic:sendDic];
         if (data) {
             [self.manager sendData:data topic:config.sendTopic qos:config.qos retain:false];
@@ -148,23 +159,33 @@
     }
 }
 
+#pragma mark - Handle Message Linder
+
+- (BOOL)listenerMessageType:(NSString *)type
+                protocolObj:(id<LFMQTTMessageProtocol>)protocolObj{
+    
+    if (type.length > 0 &&
+        [protocolObj conformsToProtocol:@protocol(LFMQTTMessageProtocol)] &&
+        [protocolObj respondsToSelector:@selector(LFMQTTMessageType:data:)]) {
+        listenerDic[type] = protocolObj;
+        return YES;
+    }
+    return NO;
+}
 
 #pragma mark - MQTTSessionManagerDelegate
 
-- (void)handleMessage:(NSData *)data onTopic:(NSString *)topic retained:(BOOL)retained {
+- (void)handleMessage:(NSData *)data
+              onTopic:(NSString *)topic
+             retained:(BOOL)retained {
     
     NSDictionary *dic = [LFMQTTUtil dicWithData:data];
-    
-    NSDictionary *responseDic = [LFMQTTUtil dicWithJsonString:dic[@"data"]];
-    
-//    id<LFMQTTMessageProtocol> objc = [config objByMessageType:dic[@"type"]];
-//    if ([objc conformsToProtocol:@protocol(LFMQTTMessageProtocol)] &&
-//        [objc respondsToSelector:@selector(LFMQTTMessage:)]) {
-//        [objc LFMQTTMessage:responseDic];
-//    }
+    id<LFMQTTMessageProtocol> obj = listenerDic[dic[@"type"]];
+    [obj LFMQTTMessageType:dic[@"type"] data:dic[@"data"]];
 }
 
-- (void)sessionManager:(MQTTSessionManager *)sessionManager didChangeState:(MQTTSessionManagerState)newState{
+- (void)sessionManager:(MQTTSessionManager *)sessionManager
+        didChangeState:(MQTTSessionManagerState)newState{
     
     NSString *stateStr = @"";
     switch (newState) {

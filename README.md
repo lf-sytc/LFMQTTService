@@ -4,29 +4,40 @@
 
 ## 1. 整体技术方案 
 
-### 1.1 场景说明
+### 1.1 GroupID相关
 
+背景：阿里云MQTT服务并没有区分环境，所以通过GroupID来区分。
+
+* GID-Client-Develop
+* GID-Client-Preview
+* GID-Client-Release
 
 ### 1.2 主题相关
 
-### 1.3 前后台交互
+前台主题区分为两个   
 
-* 后台只在用户是在线时发送消息。
-* 前端进入前台发送登录消息。
-* 前端进入后台发送断开消息。
+负责发送消息 
 
+* Topic_Uplink_Develop
+* Topic_Uplink_Preview
+* Topic_Uplink_Release
 
-### 1.4 消息格式
+负责接收消息
+
+* Topic_Instruct_Develop
+* Topic_Instruct_Preview
+* Topic_Instruct_Release
+
+### 1.3 与后台交互消息格式
 
 ```
 {
-	"type":"xxxx",     //消息类型 
-	"data":{}          //消息数据
+	"type":"xxxx",     //业务类型 
+	"data":"",         //业务数据    
 }
 ```
 
-ps:为方便后台存取,发送数据时，data的数据转化为jsonString。
-
+* 接收消息时业务数据（data）具体值由业务方处理
 
 ## Installation
 
