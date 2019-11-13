@@ -11,17 +11,15 @@
 @implementation LFMQTTUtil
 
 + (NSString *)macSignWithText:(NSString *)text
-                    secretKey:(NSString *)secretKey
-{
+                    secretKey:(NSString *)secretKey {
+    
     NSData *saltData = [secretKey dataUsingEncoding:NSUTF8StringEncoding];
     NSData *paramData = [text dataUsingEncoding:NSUTF8StringEncoding];
     NSMutableData* hash = [NSMutableData dataWithLength:CC_SHA1_DIGEST_LENGTH ];
     CCHmac(kCCHmacAlgSHA1, saltData.bytes, saltData.length, paramData.bytes, paramData.length, hash.mutableBytes);
     NSString *base64Hash = [hash base64EncodedStringWithOptions:0];
-    
     return base64Hash;
 }
-
 
 #pragma mark - to Dic
 
@@ -49,6 +47,7 @@
 #pragma mark - to Data
 
 + (NSData *)dataWtihDic:(NSDictionary *)dic {
+    
     NSError *err;
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:&err];
     
@@ -75,7 +74,4 @@
     return dataString;
 }
 
-
-
 @end
-
